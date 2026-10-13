@@ -1,0 +1,6 @@
+# 用户串里带 % 时，printf(user) 会把内容当格式串；printf("%s", user) 才安全。
+# 不调用 printf，只证明格式符存在。
+user = "%s%s%s"
+assert "%" in user
+print("format string demo ok")
+print("unsafe=printf(user) safe=printf(\"%s\", user)")

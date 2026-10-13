@@ -1,0 +1,38 @@
+# Java: command injection and path concat only.
+# Does not flag new File(fileName) or new File(parent, child).
+rules:
+  - id: oh.java-runtime-exec
+    languages: [java]
+    severity: ERROR
+    message: Non-literal command to Runtime.exec may allow command injection.
+    metadata:
+      cwe: CWE-78
+      cwe_name: Improper Neutralization of Special Elements used in an OS Command
+      confidence: medium
+    patterns:
+      - pattern: Runtime.getRuntime().exec($CMD)
+      - pattern-not: Runtime.getRuntime().exec("...")
+
+  - id: oh.java-process-builder
+    languages: [java]
+    severity: ERROR
+    message: Non-literal command to ProcessBuilder may allow command injection.
+    metadata:
+      cwe: CWE-78
+      cwe_name: Improper Neutralization of Special Elements used in an OS Command
+      confidence: medium
+    patterns:
+      - pattern: new ProcessBuilder($CMD, ...)
+      - pattern-not: new ProcessBuilder("...", ...)
+
+  - id: oh.java-file-concat
+    languages: [java]
+    severity: ERROR
+    message: File constructed from concatenated path may allow directory traversal.
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    pattern-either:
+      - pattern: new File($DIR + $NAME)
+      - pattern: new File($DIR + "/" + $NAME)

@@ -1,0 +1,72 @@
+Metadata-Version: 2.4
+Name: ohscan
+Version: 0.1.0
+Summary: OpenHarmony automated vulnerability analysis engine
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: pydantic>=2.6
+Requires-Dist: pydantic-settings>=2.2
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: typer>=0.12
+Requires-Dist: rich>=13.7
+Provides-Extra: web
+Requires-Dist: fastapi>=0.111; extra == "web"
+Requires-Dist: uvicorn[standard]>=0.30; extra == "web"
+Requires-Dist: python-multipart>=0.0.9; extra == "web"
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+
+# OHSleuth
+
+OpenHarmony 开源代码自动化漏洞分析工具。当前仓库是**可运行的开发骨架**：流水线、数据契约、前后端路径已经接通，检测引擎仍是空实现。
+
+## 结论先说
+
+上一版把「接入 → 检测 → 研判 → CVE → 影响 → PoC → 报告」画成一条直线。**要检测的内容没有问题，编排有问题**：引擎不能串行等待，PoC 不能卡住报告，Web 不能承担分析。
+
+本仓库改成三层：
+
+| 层 | 目录 | 路径 |
+|----|------|------|
+| 前端 | `frontend/` | 浏览器 :5173 → `/api/*` |
+| 后端 | `backend/` | FastAPI :8000 建任务、读结果 |
+| 分析引擎 | `analyzer/ohscan` | `ohscan scan` 才是检测路径 |
+
+## 分析路径
+
+```
+ingest → index → semgrep/codeql/clangsa（并行）
+       → merge → triage → enrich/impact（并行）
+       → poc/fix（可选） → report
+```
+
+## 本地运行
+
+分析引擎（不需要前端）：
+
+```powershell
+cd C:\Users\26355\Desktop\OHSleuth
+python -m pip install -e ".[web,dev]"
+python -m ohscan scan --src C:\path\to\code --out artifacts\demo
+```
+
+后端：
+
+```powershell
+$env:PYTHONPATH = "C:\Users\26355\Desktop\OHSleuth\analyzer;C:\Users\26355\Desktop\OHSleuth\backend"
+python backend\run.py
+```
+
+前端：
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+## 现在不要改的边界
+
+- 检测规则写在 `knowledge/`，不要写进 React。
+- 新引擎实现 `engines/base.py` 的 `Engine` 接口，不要在 `JobRunner` 里直接调命令。
+- 报告只读 `findings.jsonl`，不要前端拼漏洞字段。

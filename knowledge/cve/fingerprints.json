@@ -1,0 +1,52 @@
+{
+  "_comment": "只收录官方安全公告，且修复 diff 能落到一个明确的 C/C++ 函数。path_contains、function、cwe_id 三者缺一不可，cwe_id 必须是引擎已实现的类型。同一告警命中多行时不抄编号。公告里没有路径遍历、命令注入、格式化字符串、gets、无界复制这几类自研条目。一次修复改了很多函数的公告没有写入，避免把编号贴到无关函数。",
+  "policy": "official-advisory-and-fix-commit-only",
+  "source": "https://gitcode.com/openharmony/security/tree/master/zh/security-disclosure",
+  "items": [
+    {
+      "cve_id": "CVE-2024-28044",
+      "cwe_id": "CWE-190",
+      "path_contains": "syscall/net_syscall.c",
+      "function": "SysSendMsg",
+      "affected_versions": ["OpenHarmony-v4.0-Release", "OpenHarmony-v4.1-Release"],
+      "advisory": "zh/security-disclosure/2024/2024-09.md",
+      "fix_commit": "https://gitee.com/openharmony/kernel_liteos_a/pulls/1199"
+    },
+    {
+      "cve_id": "CVE-2024-28044",
+      "cwe_id": "CWE-190",
+      "path_contains": "syscall/net_syscall.c",
+      "function": "SysRecvMsg",
+      "affected_versions": ["OpenHarmony-v4.0-Release", "OpenHarmony-v4.1-Release"],
+      "advisory": "zh/security-disclosure/2024/2024-09.md",
+      "fix_commit": "https://gitee.com/openharmony/kernel_liteos_a/pulls/1199"
+    },
+    {
+      "cve_id": "CVE-2024-47404",
+      "cwe_id": "CWE-415",
+      "path_contains": "kernel/extended/liteipc/hm_liteipc.c",
+      "function": "HandlePtr",
+      "affected_versions": ["OpenHarmony-v4.0-Release", "OpenHarmony-v4.1-Release"],
+      "advisory": "zh/security-disclosure/2024/2024-11.md",
+      "fix_commit": "https://gitee.com/openharmony/kernel_liteos_a/pulls/1230"
+    },
+    {
+      "cve_id": "CVE-2025-0302",
+      "cwe_id": "CWE-190",
+      "path_contains": "drivers/char/mem/src/mem.c",
+      "function": "MemMap",
+      "affected_versions": ["OpenHarmony-v4.1-Release"],
+      "advisory": "zh/security-disclosure/2025/2025-02.md",
+      "fix_commit": "https://gitee.com/openharmony/kernel_liteos_a/pulls/1260"
+    },
+    {
+      "cve_id": "CVE-2026-27781",
+      "cwe_id": "CWE-190",
+      "path_contains": "kernel/base/ipc/los_mux.c",
+      "function": "OsMuxPendOp",
+      "affected_versions": ["OpenHarmony-v5.0.3-Release", "OpenHarmony-v5.1.0-Release"],
+      "advisory": "zh/security-disclosure/2026/2026-04.md",
+      "fix_commit": "https://gitcode.com/openharmony/kernel_liteos_a/pull/1326"
+    }
+  ]
+}

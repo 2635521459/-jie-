@@ -1,0 +1,16 @@
+# 把用户片段拼进目录后再规范化，可逃出 sandbox。
+# 只做路径字符串计算，不 fopen、不访问设备。
+import os
+
+BASE = <<BASE_LIT>>
+user = "../other_app/secret.txt"
+joined = BASE.rstrip("/\\") + "/" + user
+normalized = os.path.normpath(joined)
+sandbox = os.path.normpath(BASE)
+escaped = not (
+    normalized == sandbox or normalized.startswith(sandbox + os.sep)
+)
+assert escaped, normalized
+print("path concat demo ok")
+print("joined=", joined)
+print("normalized=", normalized)

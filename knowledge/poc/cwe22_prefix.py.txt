@@ -1,0 +1,23 @@
+# 目录前缀无尾斜杠时的字符串行为演示。
+# PREFIX 由 ohscan.poc 从告警源码抽取；抽不到才用默认 AREA 常量。
+# 不是利用、未在设备上执行、不得把 poc_status 标成 verified。
+PREFIX = <<PREFIX_LIT>>
+SIBLING = PREFIX + "X/secret"
+INSIDE = PREFIX + "/app"
+BOUNDED = PREFIX + "/"
+hit_prefix_sibling = SIBLING.find(PREFIX)
+hit_prefix_inside = INSIDE.find(PREFIX)
+hit_bounded_sibling = SIBLING.find(BOUNDED)
+hit_bounded_inside = INSIDE.find(BOUNDED)
+assert hit_prefix_sibling == 0
+assert hit_prefix_inside == 0
+assert hit_bounded_sibling != 0
+assert hit_bounded_inside == 0
+print("prefix=", PREFIX)
+print("input_sibling=", SIBLING)
+print("input_inside=", INSIDE)
+print("find_prefix_sibling=", hit_prefix_sibling)
+print("find_prefix_inside=", hit_prefix_inside)
+print("find_bounded_sibling=", hit_bounded_sibling)
+print("find_bounded_inside=", hit_bounded_inside)
+print("prefix boundary demo ok")

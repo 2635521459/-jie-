@@ -1,0 +1,23 @@
+/* 本地复现：用户片段留在将交给 shell 的那一条字符串里。
+ * 不调用 system / popen / exec，不启动进程。
+ */
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    const char *user = <<USER_LIT>>;
+    char shell_cmd[256];
+    int kept;
+
+    snprintf(shell_cmd, sizeof(shell_cmd), "ls %s", user);
+    kept = strstr(shell_cmd, user) != NULL && strchr(user, ';') != NULL;
+    printf("user=%s\n", user);
+    printf("shell_string=%s\n", shell_cmd);
+    printf("metacharacter_kept=%s\n", kept ? "yes" : "no");
+    if (!kept) {
+        printf("cwe78 not triggered\n");
+        return 1;
+    }
+    printf("cwe78 shell string triggered\n");
+    return 0;
+}

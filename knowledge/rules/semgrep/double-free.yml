@@ -1,0 +1,56 @@
+# CWE-415: adjacent free/delete is medium. A gap or if/else stays low.
+# Does not flag use-after-free. NULL or nullptr between the calls is not reported.
+rules:
+  - id: oh.double-free-adjacent
+    languages: [c, cpp]
+    severity: ERROR
+    message: The same pointer is freed on two consecutive lines.
+    metadata:
+      cwe: CWE-415
+      cwe_name: Double Free
+      confidence: medium
+    pattern-either:
+      - pattern: |
+          free($P);
+          free($P);
+      - pattern: |
+          delete $P;
+          delete $P;
+
+  - id: oh.double-free
+    languages: [c, cpp]
+    severity: WARNING
+    message: The same pointer is freed twice with other statements between the calls.
+    metadata:
+      cwe: CWE-415
+      cwe_name: Double Free
+      confidence: low
+    pattern-either:
+      - patterns:
+          - pattern: |
+              free($P);
+              ...
+              free($P);
+          - pattern-not: |
+              free($P);
+              free($P);
+          - pattern-not: |
+              free($P);
+              ...
+              $P = NULL;
+              ...
+              free($P);
+      - patterns:
+          - pattern: |
+              delete $P;
+              ...
+              delete $P;
+          - pattern-not: |
+              delete $P;
+              delete $P;
+          - pattern-not: |
+              delete $P;
+              ...
+              $P = nullptr;
+              ...
+              delete $P;

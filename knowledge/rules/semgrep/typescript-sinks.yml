@@ -1,0 +1,51 @@
+# TypeScript / JavaScript / ArkTS(.ets forced as typescript).
+# Command injection and fs path concat only.
+# Does not flag readFile(fileName), path.join, or eval.
+rules:
+  - id: oh.ts-exec-command
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Non-literal command to exec/execSync may allow command injection.
+    metadata:
+      cwe: CWE-78
+      cwe_name: Improper Neutralization of Special Elements used in an OS Command
+      confidence: medium
+    pattern-either:
+      - patterns:
+          - pattern: exec($CMD, ...)
+          - pattern-not: exec("...", ...)
+      - patterns:
+          - pattern: execSync($CMD, ...)
+          - pattern-not: execSync("...", ...)
+
+  - id: oh.ts-fs-concat
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: fs API on a concatenated path may allow directory traversal.
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    pattern-either:
+      - pattern: fs.readFile($DIR + $NAME, ...)
+      - pattern: fs.readFileSync($DIR + $NAME, ...)
+      - pattern: fs.writeFile($DIR + $NAME, ...)
+      - pattern: fs.writeFileSync($DIR + $NAME, ...)
+      - pattern: fs.open($DIR + $NAME, ...)
+      - pattern: fs.openSync($DIR + $NAME, ...)
+      - pattern: readFile($DIR + $NAME, ...)
+      - pattern: readFileSync($DIR + $NAME, ...)
+
+  - id: oh.ets-fs-concat
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: "@ohos.file.fs on a concatenated path may allow directory traversal."
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    pattern-either:
+      - pattern: fs.readText($DIR + $NAME, ...)
+      - pattern: fs.readTextSync($DIR + $NAME, ...)
+      - pattern: fileIo.open($DIR + $NAME, ...)
+      - pattern: fileIo.openSync($DIR + $NAME, ...)

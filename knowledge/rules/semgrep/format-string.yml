@@ -1,0 +1,33 @@
+# Format string: non-literal format argument only.
+# Does not flag printf("%s", x) or snprintf with a literal format.
+rules:
+  - id: oh.printf-format-string
+    languages: [c, cpp]
+    severity: ERROR
+    message: Non-literal format string in printf-family may be attacker controlled.
+    metadata:
+      cwe: CWE-134
+      cwe_name: Use of Externally-Controlled Format String
+      confidence: medium
+    pattern-either:
+      - patterns:
+          - pattern: printf($FMT, ...)
+          - pattern-not: printf("...", ...)
+      - patterns:
+          - pattern: fprintf($FP, $FMT, ...)
+          - pattern-not: fprintf($FP, "...", ...)
+      - patterns:
+          - pattern: sprintf($DST, $FMT, ...)
+          - pattern-not: sprintf($DST, "...", ...)
+      - patterns:
+          - pattern: syslog($PRI, $FMT, ...)
+          - pattern-not: syslog($PRI, "...", ...)
+      - patterns:
+          - pattern: snprintf($DST, $N, $FMT, ...)
+          - pattern-not: snprintf($DST, $N, "...", ...)
+      - patterns:
+          - pattern: vfprintf($FP, $FMT, $AP)
+          - pattern-not: vfprintf($FP, "...", $AP)
+      - patterns:
+          - pattern: vsyslog($PRI, $FMT, $AP)
+          - pattern-not: vsyslog($PRI, "...", $AP)

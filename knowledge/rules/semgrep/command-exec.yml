@@ -1,0 +1,57 @@
+# Command execution: non-literal command string only.
+# Does not flag system("fixed") or popen("fixed", "r").
+rules:
+  - id: oh.system-command
+    languages: [c, cpp]
+    severity: ERROR
+    message: Non-literal command to system() may allow command injection.
+    metadata:
+      cwe: CWE-78
+      cwe_name: Improper Neutralization of Special Elements used in an OS Command
+      confidence: medium
+    patterns:
+      - pattern: system($CMD)
+      - pattern-not: system("...")
+
+  - id: oh.popen-command
+    languages: [c, cpp]
+    severity: ERROR
+    message: Non-literal command to popen() may allow command injection.
+    metadata:
+      cwe: CWE-78
+      cwe_name: Improper Neutralization of Special Elements used in an OS Command
+      confidence: medium
+    patterns:
+      - pattern: popen($CMD, $MODE)
+      - pattern-not: popen("...", $MODE)
+
+  - id: oh.exec-command
+    languages: [c, cpp]
+    severity: ERROR
+    message: Non-literal path/args to exec* may allow command injection.
+    metadata:
+      cwe: CWE-78
+      cwe_name: Improper Neutralization of Special Elements used in an OS Command
+      confidence: medium
+    patterns:
+      - pattern-either:
+          - pattern: execl($PATH, ...)
+          - pattern: execlp($FILE, ...)
+          - pattern: execv($PATH, $ARGV)
+          - pattern: execvp($FILE, $ARGV)
+      - pattern-not: execl("...", ...)
+      - pattern-not: execlp("...", ...)
+      - pattern-not: execv("...", $ARGV)
+      - pattern-not: execvp("...", $ARGV)
+
+  - id: oh.posix-spawn-command
+    languages: [c, cpp]
+    severity: ERROR
+    message: Non-literal file to posix_spawn may allow command injection.
+    metadata:
+      cwe: CWE-78
+      cwe_name: Improper Neutralization of Special Elements used in an OS Command
+      confidence: medium
+    patterns:
+      - pattern: posix_spawn($PID, $FILE, ...)
+      - pattern-not: posix_spawn($PID, "...", ...)

@@ -1,0 +1,113 @@
+# Path traversal candidates (CWE-22). Conservative prefix / concat checks.
+# Does not flag URI scheme checks, fopen(fileName), or strncmp on *name* variables.
+# 已按 prefix+'/' 或 strlen(prefix)+1 做目录边界的，不当漏洞。
+rules:
+  - id: oh.path-find-prefix
+    languages: [c, cpp]
+    severity: ERROR
+    message: Prefix check with find()==0 does not enforce a path boundary (trailing slash).
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    patterns:
+      - pattern: $P.find($PREFIX) == 0
+      # find('/') is char; find("/") is string — both are "is absolute", not a sandbox.
+      - pattern-not: $P.find("/") == 0
+      - pattern-not: $P.find('/') == 0
+      - pattern-not: $P.find("./") == 0
+      - pattern-not: $P.find("file://") == 0
+      - pattern-not: $P.find("file://docs/") == 0
+      - pattern-not: $P.find("file://media/") == 0
+      - pattern-not: $P.find("internal://") == 0
+      - pattern-not: $P.find("http://") == 0
+      - pattern-not: $P.find("https://") == 0
+      - pattern-not: $P.find("datashare://") == 0
+      - pattern-not: $P.find("content://") == 0
+      - pattern-not: $P.find("fd://") == 0
+      # URI/scheme dispatch by identifier. AREA1/2/5 stay: no trailing slash.
+      - pattern-not: $P.find(FILE_PREFIX) == 0
+      - pattern-not: $P.find(INTERNAL_PREFIX) == 0
+      - pattern-not: $P.find(CURRENT_PREFIX) == 0
+      # 已经拼上尾斜杠的是目录边界，不再当 CWE-22。
+      - pattern-not: $P.find($PREFIX + "/") == 0
+      - pattern-not: $P.find($PREFIX + '/') == 0
+      - metavariable-regex:
+          metavariable: $P
+          regex: (?i).*(path|dir|file|folder|uri).*
+
+  # OH sandbox dir constants; variable need not be named filepath (covers elem.find(AREA1)).
+  - id: oh.path-area-prefix
+    languages: [c, cpp]
+    severity: ERROR
+    message: AREA1/2/5 prefix check does not enforce a path boundary (trailing slash).
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    patterns:
+      - pattern-either:
+          - pattern: $P.find(AREA1) == 0
+          - pattern: $P.find(AREA2) == 0
+          - pattern: $P.find(AREA5) == 0
+      # AREA + '/' 已构成沙箱目录边界，样本里这种写法不应再报。
+      - pattern-not: $P.find(AREA1 + "/") == 0
+      - pattern-not: $P.find(AREA2 + "/") == 0
+      - pattern-not: $P.find(AREA5 + "/") == 0
+      - pattern-not: $P.find(AREA1 + '/') == 0
+      - pattern-not: $P.find(AREA2 + '/') == 0
+      - pattern-not: $P.find(AREA5 + '/') == 0
+
+  - id: oh.strncmp-path-prefix
+    languages: [c, cpp]
+    severity: ERROR
+    message: strncmp(path, prefix, strlen(prefix))==0 can match a longer path that only shares a prefix.
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    patterns:
+      - pattern-either:
+          - pattern: strncmp($P, $PREFIX, strlen($PREFIX)) == 0
+          - pattern: strncmp($P, $PREFIX, sizeof($PREFIX) - 1) == 0
+      # 比较长度含结尾空字符时，更长路径无法误匹配。
+      - pattern-not: strncmp($P, $PREFIX, strlen($PREFIX) + 1) == 0
+      - metavariable-regex:
+          metavariable: $P
+          regex: (?i).*(path|dir|file|folder|uri).*
+
+  - id: oh.fopen-concat
+    languages: [c, cpp]
+    severity: ERROR
+    message: fopen on a concatenated path may allow directory traversal.
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    pattern-either:
+      - pattern: fopen($DIR + $NAME, $MODE)
+      - pattern: fopen($DIR + "/" + $NAME, $MODE)
+
+  - id: oh.open-concat
+    languages: [c, cpp]
+    severity: ERROR
+    message: open() on a concatenated path may allow directory traversal.
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    pattern-either:
+      - pattern: open($DIR + $NAME, ...)
+      - pattern: open($DIR + "/" + $NAME, ...)
+
+  - id: oh.openat-concat
+    languages: [c, cpp]
+    severity: ERROR
+    message: openat() on a concatenated path may allow directory traversal.
+    metadata:
+      cwe: CWE-22
+      cwe_name: Improper Limitation of a Pathname to a Restricted Directory
+      confidence: medium
+    pattern-either:
+      - pattern: openat($FD, $DIR + $NAME, ...)
+      - pattern: openat($FD, $DIR + "/" + $NAME, ...)

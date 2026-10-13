@@ -1,0 +1,11 @@
+# 动态阶段配置。密钥不要提交：用环境变量 OHSCAN_API_KEY。
+# enabled: false 时 ohscan review 立即返回，静态产物不变。
+enabled: true
+provider: openai_compat
+base_url: "https://api.deepseek.com"
+model: "deepseek-v4-pro"
+api_key: "sk-dbdf26eddd3a4b72ae298618b2d94a6b"
+max_tool_rounds: 6
+timeout_seconds: 60
+# 默认 false：动态 reject 只写 extra.dynamic，不从 findings 删除。
+apply_verdict_to_accepted: false

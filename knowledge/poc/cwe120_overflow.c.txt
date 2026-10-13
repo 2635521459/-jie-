@@ -1,0 +1,68 @@
+/* 本地复现：拷贝长度只看源串，相邻 canary 被改写。
+ * 写入停在本结构体内，不改返回地址，不链接 OpenHarmony。
+ * 必须 -O0 编译，才能观察到这次越界。
+ */
+#include <stdio.h>
+#include <string.h>
+
+struct slot {
+    char dst[8];
+    volatile unsigned char canary[8];
+};
+
+static void set_canary(struct slot *box) {
+    memcpy((void *)box->canary, "CANARY!!", 8);
+}
+
+static int canary_intact(const struct slot *box) {
+    return memcmp((const void *)box->canary, "CANARY!!", 8) == 0;
+}
+
+/* 与 strcpy 相同的长度规则：拷贝 strlen(src)+1，不看目标容量。 */
+static void unbounded_copy(char *dst, const char *src) {
+    size_t n = strlen(src) + 1;
+    size_t i;
+    for (i = 0; i < n; i++) {
+        dst[i] = src[i];
+    }
+}
+
+static void bounded_copy(char *dst, size_t cap, const char *src) {
+    size_t n = strlen(src);
+    size_t i;
+    if (cap == 0) {
+        return;
+    }
+    if (n >= cap) {
+        n = cap - 1;
+    }
+    for (i = 0; i < n; i++) {
+        dst[i] = src[i];
+    }
+    dst[n] = '\0';
+}
+
+int main(void) {
+    struct slot bad;
+    struct slot good;
+    /* 15 字节加 NUL，正好写满 dst[8]+canary[8]，不写出结构体。 */
+    const char *src = "01234567XXXXXXX";
+    int triggered;
+
+    memset(&bad, 0, sizeof(bad));
+    memset(&good, 0, sizeof(good));
+    set_canary(&bad);
+    set_canary(&good);
+    unbounded_copy(bad.dst, src);
+    bounded_copy(good.dst, sizeof(good.dst), src);
+    triggered = !canary_intact(&bad) && canary_intact(&good);
+    printf("dst_cap=%zu copy_len=%zu\n", sizeof(bad.dst), strlen(src) + 1);
+    printf("unbounded_canary=%s\n", canary_intact(&bad) ? "intact" : "overwritten");
+    printf("bounded_canary=%s\n", canary_intact(&good) ? "intact" : "overwritten");
+    if (!triggered) {
+        printf("cwe120 not triggered\n");
+        return 1;
+    }
+    printf("cwe120 overflow triggered\n");
+    return 0;
+}

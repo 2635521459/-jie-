@@ -1,0 +1,31 @@
+# CWE-190: allocation size is a product of two non-constant, non-sizeof factors.
+# Does not prove a missing upper bound. confidence is low, so triage keeps it out of the report.
+# Does not flag malloc(n * sizeof(T)), new T[n], or new T[n * sizeof(U)].
+rules:
+  - id: oh.alloc-mul-size
+    languages: [c, cpp]
+    severity: WARNING
+    message: Allocation size is a product of two values and can wrap before the allocator sees it.
+    metadata:
+      cwe: CWE-190
+      cwe_name: Integer Overflow or Wraparound
+      confidence: low
+    pattern-either:
+      - patterns:
+          - pattern: malloc($A * $B)
+          - pattern-not: malloc($A * sizeof(...))
+          - pattern-not: malloc(sizeof(...) * $B)
+      - patterns:
+          - pattern: new $TYPE[$A * $B]
+          - pattern-not: new $TYPE[$A * sizeof(...)]
+          - pattern-not: new $TYPE[sizeof(...) * $B]
+
+  - id: oh.java-array-mul-size
+    languages: [java]
+    severity: WARNING
+    message: Array length is a product of two values and can wrap.
+    metadata:
+      cwe: CWE-190
+      cwe_name: Integer Overflow or Wraparound
+      confidence: low
+    pattern: new $TYPE[$A * $B]

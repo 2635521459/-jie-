@@ -1,0 +1,63 @@
+# Unbounded copy beyond strcpy/sprintf.
+# Detects: memcpy sized by strlen, vsprintf, scanf("%s").
+# Does not flag memcpy with dest sizeof, strncpy, snprintf, fgets.
+rules:
+  - id: oh.memcpy-strlen
+    languages: [c, cpp]
+    severity: ERROR
+    message: memcpy sized by strlen(source) ignores destination capacity.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    pattern-either:
+      - pattern: memcpy($DST, $SRC, strlen($SRC))
+      - pattern: memcpy($DST, $SRC, strlen($SRC) + 1)
+      - pattern: memmove($DST, $SRC, strlen($SRC))
+      - pattern: memmove($DST, $SRC, strlen($SRC) + 1)
+
+  - id: oh.vsprintf-unbounded
+    languages: [c, cpp]
+    severity: ERROR
+    message: Unbounded vsprintf may overflow the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    pattern: vsprintf($DST, $FMT, $AP)
+
+  - id: oh.scanf-unbounded-s
+    languages: [c, cpp]
+    severity: ERROR
+    message: scanf("%s") cannot bound the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    pattern-either:
+      - pattern: scanf("%s", $BUF)
+      - pattern: fscanf($FP, "%s", $BUF)
+      - pattern: sscanf($SRC, "%s", $BUF)
+
+  - id: oh.wsprintf-unbounded
+    languages: [c, cpp]
+    severity: ERROR
+    message: Unbounded wsprintf may overflow the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    pattern: wsprintf($DST, $FMT, ...)
+
+  - id: oh.scanf-unbounded-ls
+    languages: [c, cpp]
+    severity: ERROR
+    message: scanf("%ls") / wide %s cannot bound the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    pattern-either:
+      - pattern: scanf("%ls", $BUF)
+      - pattern: wscanf("%s", $BUF)
+      - pattern: swscanf($SRC, "%s", $BUF)

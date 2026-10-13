@@ -1,0 +1,39 @@
+# CWE-200: log or printf argument whose source text looks like a secret.
+# Name match only. Does not detect uninitialized buffers.
+# confidence is low, so triage keeps it out of the report.
+rules:
+  - id: oh.log-secret-name
+    languages: [c, cpp]
+    severity: WARNING
+    message: A value whose name looks like a secret is passed to printf or HILOG.
+    metadata:
+      cwe: CWE-200
+      cwe_name: Exposure of Sensitive Information to an Unauthorized Actor
+      confidence: low
+    patterns:
+      - pattern-either:
+          - pattern: printf($FMT, ..., $X, ...)
+          - pattern: HILOG($LEVEL, $FMT, ..., $X, ...)
+          - pattern: HILOGE($FMT, ..., $X, ...)
+          - pattern: HILOGI($FMT, ..., $X, ...)
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(password|passwd|token|secret|api_key).*
+
+  - id: oh.java-log-secret-name
+    languages: [java]
+    severity: WARNING
+    message: A value whose name looks like a secret is passed to a logger.
+    metadata:
+      cwe: CWE-200
+      cwe_name: Exposure of Sensitive Information to an Unauthorized Actor
+      confidence: low
+    patterns:
+      - pattern-either:
+          - pattern: $LOG.info($FMT, $X)
+          - pattern: $LOG.debug($FMT, $X)
+          - pattern: Log.i($TAG, $X)
+          - pattern: Log.d($TAG, $X)
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(password|passwd|token|secret|api_key).*

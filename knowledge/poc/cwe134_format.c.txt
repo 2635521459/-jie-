@@ -1,0 +1,27 @@
+/* 本地复现：用户串被当成 printf 格式，而不是普通文本。
+ * 格式符只有 %d，并提供对应参数。不用 %n，不读栈上的其他数据。
+ */
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    const char *user = "marker=%d";
+    char as_format[64];
+    char as_literal[64];
+    int triggered;
+
+    snprintf(as_format, sizeof(as_format), user, 7);
+    snprintf(as_literal, sizeof(as_literal), "%s", user);
+    printf("user=%s\n", user);
+    printf("as_format=%s\n", as_format);
+    printf("as_literal=%s\n", as_literal);
+    triggered = strcmp(as_format, "marker=7") == 0 &&
+                strcmp(as_literal, user) == 0 &&
+                strcmp(as_format, as_literal) != 0;
+    if (!triggered) {
+        printf("cwe134 not triggered\n");
+        return 1;
+    }
+    printf("cwe134 format triggered\n");
+    return 0;
+}

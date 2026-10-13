@@ -1,0 +1,8 @@
+# 无界拷贝：复制长度只看源串，不看目标容量。
+# 用长度比较证明会越界，不依赖 ASan，也不链接 OpenHarmony。
+dst_cap = 8
+src = "A" * 12
+copy_len = len(src) + 1
+assert copy_len > dst_cap
+print("buffer copy demo ok")
+print("dst_cap=", dst_cap, "copy_len=", copy_len)

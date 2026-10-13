@@ -1,0 +1,95 @@
+# First-pass rules: unbounded C string APIs (candidates, not final vulns).
+# Detects: strcpy / strcat / sprintf / gets / stpcpy / wcscpy / wcscat / getwd.
+# Does not flag strncpy, snprintf, fgets. Literals are excluded (not a typical overflow).
+rules:
+  - id: oh.strcpy-unbounded
+    languages: [c, cpp]
+    severity: ERROR
+    message: Unbounded strcpy may overflow the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    patterns:
+      - pattern: strcpy($DST, $SRC)
+      - pattern-not: strcpy($DST, "...")
+
+  - id: oh.strcat-unbounded
+    languages: [c, cpp]
+    severity: ERROR
+    message: Unbounded strcat may overflow the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    patterns:
+      - pattern: strcat($DST, $SRC)
+      - pattern-not: strcat($DST, "...")
+
+  - id: oh.sprintf-unbounded
+    languages: [c, cpp]
+    severity: ERROR
+    message: Unbounded sprintf may overflow the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    pattern: sprintf($DST, $FMT, ...)
+
+  - id: oh.gets
+    languages: [c, cpp]
+    severity: ERROR
+    message: gets() cannot bound input length.
+    metadata:
+      cwe: CWE-242
+      cwe_name: Use of Inherently Dangerous Function
+      confidence: high
+    pattern: gets($BUF)
+
+  - id: oh.stpcpy-unbounded
+    languages: [c, cpp]
+    severity: ERROR
+    message: Unbounded stpcpy may overflow the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    patterns:
+      - pattern: stpcpy($DST, $SRC)
+      - pattern-not: stpcpy($DST, "...")
+
+  - id: oh.wcscpy-unbounded
+    languages: [c, cpp]
+    severity: ERROR
+    message: Unbounded wcscpy may overflow the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    patterns:
+      - pattern: wcscpy($DST, $SRC)
+      - pattern-not: wcscpy($DST, "...")
+      - pattern-not: wcscpy($DST, L"...")
+
+  - id: oh.wcscat-unbounded
+    languages: [c, cpp]
+    severity: ERROR
+    message: Unbounded wcscat may overflow the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: medium
+    patterns:
+      - pattern: wcscat($DST, $SRC)
+      - pattern-not: wcscat($DST, "...")
+      - pattern-not: wcscat($DST, L"...")
+
+  - id: oh.getwd
+    languages: [c, cpp]
+    severity: ERROR
+    message: getwd() cannot bound the destination buffer.
+    metadata:
+      cwe: CWE-120
+      cwe_name: Buffer Copy without Checking Size of Input
+      confidence: high
+    pattern: getwd($BUF)

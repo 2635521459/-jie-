@@ -1,0 +1,46 @@
+/* 本地复现：无尾斜杠的前缀比较会把兄弟目录判进沙箱。
+ * 只比较字符串，不打开文件，不访问设备。
+ */
+#include <stdio.h>
+#include <string.h>
+
+static int vulnerable_accept(const char *path, const char *prefix) {
+    return strncmp(path, prefix, strlen(prefix)) == 0;
+}
+
+static int fixed_accept(const char *path, const char *prefix) {
+    char bounded[256];
+    int n = snprintf(bounded, sizeof(bounded), "%s/", prefix);
+    if (n <= 0 || (size_t)n >= sizeof(bounded)) {
+        return 0;
+    }
+    return strncmp(path, bounded, strlen(bounded)) == 0;
+}
+
+int main(void) {
+    const char *prefix = <<PREFIX_LIT>>;
+    char sibling[512];
+    char inside[512];
+    int bad_sibling;
+    int bad_inside;
+    int fix_sibling;
+    int fix_inside;
+
+    snprintf(sibling, sizeof(sibling), "%sX/secret", prefix);
+    snprintf(inside, sizeof(inside), "%s/app", prefix);
+    bad_sibling = vulnerable_accept(sibling, prefix);
+    bad_inside = vulnerable_accept(inside, prefix);
+    fix_sibling = fixed_accept(sibling, prefix);
+    fix_inside = fixed_accept(inside, prefix);
+
+    printf("prefix=%s\n", prefix);
+    printf("input_sibling=%s\n", sibling);
+    printf("vulnerable_sibling=%s\n", bad_sibling ? "accepted" : "rejected");
+    printf("fixed_sibling=%s\n", fix_sibling ? "accepted" : "rejected");
+    if (!(bad_sibling && bad_inside && !fix_sibling && fix_inside)) {
+        printf("cwe22 prefix not triggered\n");
+        return 1;
+    }
+    printf("cwe22 prefix triggered\n");
+    return 0;
+}

@@ -1,0 +1,10 @@
+# 展示「拼进一条 shell 字符串」和 argv 数组的差异。
+# 禁止执行拼出来的命令。
+user = <<USER_LIT>>
+shell_cmd = "ls " + user
+argv = ["ls", user]
+assert user in shell_cmd
+assert argv == ["ls", user]
+print("command concat demo ok")
+print("would_pass_to_system=", shell_cmd)
+print("argv=", argv)

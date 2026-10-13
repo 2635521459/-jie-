@@ -1,0 +1,37 @@
+# OpenHarmony 子系统归属。index / impact 只用这一份。
+# paths：全仓相对路径前缀，长的优先。
+# standalone：扫描根目录名（拆开的组件仓）-> 子系统；对不上 paths 时才用。
+# 不要把光秃的 "frameworks" 标成 request，否则会误伤 hilog 仓。
+subsystems:
+  - name: kernel
+    paths: ["kernel"]
+  - name: communication
+    paths: ["foundation/communication", "communication"]
+  - name: security
+    paths: ["base/security", "base/hiviewdfx"]
+  - name: hiviewdfx
+    paths:
+      - "hiviewdfx"
+      - "base/hiviewdfx"
+      - "frameworks/libhilog"
+      - "frameworks/hilog_ndk"
+      - "services/hilogd"
+      - "services/hilogtool"
+  - name: arkcompiler
+    paths: ["arkcompiler"]
+  - name: request
+    paths:
+      - "foundation/request"
+      - "base/request"
+  - name: appspawn
+    paths:
+      - "base/startup/appspawn"
+      - "startup/appspawn"
+
+standalone:
+  request_request: request
+  request: request
+  hiviewdfx_hilog: hiviewdfx
+  hilog: hiviewdfx
+  startup_appspawn: appspawn
+  appspawn: appspawn
